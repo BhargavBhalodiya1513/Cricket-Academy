@@ -66,18 +66,6 @@ export function initPlayers() {
 
   document.getElementById('filter-type')?.addEventListener('change', applyFilters);
   document.getElementById('filter-fees')?.addEventListener('change', applyFilters);
-
-  // Toggle fee fields when adding a new player
-  document.getElementById('p-fees-status')?.addEventListener('change', (e) => {
-    if (currentEditId) return; // Only for new players
-    const val = e.target.value;
-    const fields = document.querySelectorAll('.initial-fee-field');
-    if (val === 'paid' || val === 'partial') {
-      fields.forEach(f => f.style.display = 'block');
-    } else {
-      fields.forEach(f => f.style.display = 'none');
-    }
-  });
 }
 
 // ─── BATCHES LOADER (for dropdown) ──────────────────────────────────────────────
@@ -221,7 +209,6 @@ function openAddModal() {
   const dateEl = document.getElementById('p-joining-date');
   if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
   
-  document.querySelectorAll('.initial-fee-field').forEach(f => f.style.display = 'none');
   playerModal?.show();
 }
 
@@ -238,10 +225,8 @@ function openEditModal(player) {
   setVal('p-address', player.address);
   setVal('p-joining-date', player.joiningDate || '');
   setVal('p-type', player.playingType);
-  setVal('p-fees-status', player.feesStatus);
   setVal('p-batch', player.batchId || '');
 
-  document.querySelectorAll('.initial-fee-field').forEach(f => f.style.display = 'none');
   playerModal?.show();
 }
 
@@ -288,7 +273,6 @@ async function handleSavePlayer() {
     address:     (getVal('p-address') || '').trim(),
     joiningDate: getVal('p-joining-date') || '',
     playingType: getVal('p-type') || '',
-    feesStatus:  getVal('p-fees-status') || 'pending',
     batchId:     getVal('p-batch') || '',
   };
 
@@ -296,20 +280,8 @@ async function handleSavePlayer() {
   if (currentEditId) {
     result = await updateDocument('players', currentEditId, data);
   } else {
+    data.feesStatus = 'pending'; // Default for new players
     result = await addDocument('players', data);
-    
-    // Automatically log payment if paid/partial
-    if (!result.error && (data.feesStatus === 'paid' || data.feesStatus === 'partial')) {
-      await addDocument('fees', {
-        playerId: result.id,
-        playerName: data.name,
-        amount: Number(getVal('p-fee-amount')) || 0,
-        paymentDate: data.joiningDate || new Date().toISOString().split('T')[0],
-        status: data.feesStatus,
-        paymentMethod: getVal('p-fee-method'),
-        notes: 'Initial registration payment',
-      });
-    }
   }
 
   setButtonLoading(saveBtn, false);
@@ -347,21 +319,7 @@ function validatePlayerForm() {
   const age    = Number(getVal('p-age'));
   const mobile = (getVal('p-mobile') || '').trim();
   const date   = getVal('p-joining-date');
-  const type   = getVal('p-type');
-  const fees   = getVal('p-fees-status');
-
-  if (!name)                        errors.push('Player name is required.');
-  if (!age || age < 5 || age > 99) errors.push('Age must be between 5 and 99.');
-  if (!mobile || !/^\+?[\d\s\-]{7,15}$/.test(mobile)) errors.push('Enter a valid mobile number (7–15 digits).');
-  if (!date)                        errors.push('Joining date is required.');
   if (!type)                        errors.push('Playing type is required.');
-  if (!fees)                        errors.push('Fee status is required.');
-
-  if (!currentEditId && (fees === 'paid' || fees === 'partial')) {
-    const amt = Number(getVal('p-fee-amount'));
-    if (!amt || amt < 1) errors.push('Enter a valid fee amount for the initial payment.');
-    if (!getVal('p-fee-method')) errors.push('Select a payment method for the initial payment.');
-  }
 
   return errors;
 }
@@ -375,7 +333,6 @@ function resetForm() {
   if (hiddenId) hiddenId.value = '';
   currentEditId = null;
   populateBatchDropdown();
-  document.querySelectorAll('.initial-fee-field').forEach(f => f.style.display = 'none');
 }
 
 function getVal(id) {

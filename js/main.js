@@ -165,10 +165,22 @@ export function confirmDialog(message, title = "Confirm Action") {
     const bsModal = new bootstrap.Modal(modal, { backdrop: "static" });
     bsModal.show();
 
-    const cleanup = (result) => { bsModal.hide(); modal.addEventListener("hidden.bs.modal", () => { modal.remove(); resolve(result); }, { once: true }); };
+    let isResolved = false;
+
+    const cleanup = (result) => {
+      if (isResolved) return;
+      isResolved = true;
+      resolve(result);
+      bsModal.hide();
+    };
+
     modal.querySelector("#confirm-ok-btn")?.addEventListener("click", () => cleanup(true));
     modal.querySelector("#confirm-cancel-btn")?.addEventListener("click", () => cleanup(false));
-    modal.addEventListener("hidden.bs.modal", () => { modal.remove(); resolve(false); }, { once: true });
+    
+    modal.addEventListener("hidden.bs.modal", () => {
+      modal.remove();
+      if (!isResolved) resolve(false);
+    }, { once: true });
   });
 }
 
