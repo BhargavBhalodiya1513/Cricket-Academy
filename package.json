@@ -1,0 +1,15 @@
+{
+  "name": "cricket-academy-management-system",
+  "version": "1.0.0",
+  "description": "Cricket Academy Management System — Admin Portal",
+  "scripts": {
+    "dev": "npx http-server . -p 3000 -c-1 --cors -o",
+    "serve": "npx http-server . -p 3000 -c-1 --cors"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": ["cricket", "academy", "management", "firebase"],
+  "author": "Cricket Academy",
+  "license": "MIT"
+}

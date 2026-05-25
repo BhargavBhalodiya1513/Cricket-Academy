@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Cricket Academy — Batch Management" />
+  <title>Batches — Cricket Academy</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="auth-loading-overlay" role="status">
+  <div class="spinner-border"></div>
+  <p>Loading…</p>
+</div>
+
+<div class="layout-wrapper">
+  <aside id="sidebar" role="navigation" aria-label="Sidebar"></aside>
+  <div id="sidebar-overlay"></div>
+
+  <div class="main-content">
+    <header class="top-navbar">
+      <button id="sidebar-toggle" aria-label="Toggle sidebar"><i class="bi bi-list"></i></button>
+      <span class="page-title"><i class="bi bi-layers-fill me-2"></i>Batch Management</span>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <button class="icon-btn" id="theme-toggle-btn" aria-label="Toggle theme"><i class="bi bi-moon-stars-fill" id="theme-icon"></i></button>
+        <a href="#" class="btn btn-sm btn-outline-danger ms-1" data-action="logout" style="font-size:0.8rem;"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+      </div>
+    </header>
+
+    <main class="page-content" id="page-content" style="display:none;">
+      <div class="page-header">
+        <div>
+          <h2><i class="bi bi-layers-fill me-2 text-primary-custom"></i>Batches</h2>
+          <p>Create and manage training batches</p>
+        </div>
+        <button class="btn-primary-custom" id="add-batch-btn">
+          <i class="bi bi-plus-circle-fill me-1"></i> Create Batch
+        </button>
+      </div>
+
+      <!-- Batch Count Summary -->
+      <div class="row g-3 mb-4" id="batch-summary-row">
+        <div class="col-6 col-md-3">
+          <div class="stat-card card-primary">
+            <div class="stat-icon"><i class="bi bi-layers-fill"></i></div>
+            <div class="stat-value" id="stat-total-batches">—</div>
+            <div class="stat-label">Total Batches</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card card-success">
+            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-value" id="stat-total-capacity">—</div>
+            <div class="stat-label">Total Capacity</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card card-accent">
+            <div class="stat-icon"><i class="bi bi-person-check-fill"></i></div>
+            <div class="stat-value" id="stat-assigned-players">—</div>
+            <div class="stat-label">Assigned Players</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card card-danger">
+            <div class="stat-icon"><i class="bi bi-person-dash-fill"></i></div>
+            <div class="stat-value" id="stat-available-slots">—</div>
+            <div class="stat-label">Available Slots</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="card-panel mb-3">
+        <div class="panel-body py-3">
+          <div class="search-bar" style="max-width:400px;">
+            <i class="bi bi-search"></i>
+            <input type="search" id="batch-search" class="form-control" placeholder="Search by batch name or timing…" aria-label="Search batches" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Batch Cards Grid -->
+      <div class="row g-3" id="batch-cards-grid">
+        <div class="col-12">
+          <div class="table-loading">
+            <div class="spinner-border spinner-border-sm me-2"></div> Loading batches…
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Add/Edit Batch Modal -->
+<div class="modal fade" id="batchModal" tabindex="-1" aria-labelledby="batchModalLabel" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="batchModalLabel"><i class="bi bi-plus-circle-fill me-2"></i>Create Batch</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="batch-form" novalidate>
+          <input type="hidden" id="batch-doc-id" />
+          <div class="row g-3">
+            <div class="col-12">
+              <label for="b-name" class="form-label">Batch Name <span class="text-danger">*</span></label>
+              <input type="text" id="b-name" class="form-control" placeholder="e.g. Morning Batch A" maxlength="60" required />
+            </div>
+            <div class="col-md-6">
+              <label for="b-timing" class="form-label">Timing <span class="text-danger">*</span></label>
+              <input type="text" id="b-timing" class="form-control" placeholder="e.g. 6:00 AM – 8:00 AM" maxlength="40" required />
+            </div>
+            <div class="col-md-6">
+              <label for="b-capacity" class="form-label">Capacity <span class="text-danger">*</span></label>
+              <input type="number" id="b-capacity" class="form-control" placeholder="Max players" min="1" max="500" required />
+            </div>
+            <div class="col-12">
+              <label for="b-description" class="form-label">Description</label>
+              <textarea id="b-description" class="form-control" rows="2" placeholder="Optional batch description…" maxlength="200"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn-primary-custom" id="save-batch-btn">
+          <i class="bi bi-check-lg me-1"></i>Save Batch
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { observeAuth }   from './js/firebase-db.js';
+  import { initTheme, initSidebar, initLogout, toggleTheme } from './js/main.js';
+  import { injectSidebar } from './js/sidebar.js';
+  import { initBatches }   from './js/batches.js';
+
+  initTheme();
+  injectSidebar('sidebar');
+
+  observeAuth((user) => {
+    const overlay = document.getElementById('auth-loading-overlay');
+    const content = document.getElementById('page-content');
+    if (!user) { window.location.replace('index.html'); return; }
+    if (overlay) overlay.style.display = 'none';
+    if (content) content.style.display = 'block';
+    initSidebar();
+    initLogout();
+    document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
+    initBatches();
+  });
+</script>
+</body>
+</html>
