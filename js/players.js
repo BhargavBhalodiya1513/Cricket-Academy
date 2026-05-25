@@ -319,6 +319,12 @@ function validatePlayerForm() {
   const age    = Number(getVal('p-age'));
   const mobile = (getVal('p-mobile') || '').trim();
   const date   = getVal('p-joining-date');
+  const type   = getVal('p-type');
+
+  if (!name)                        errors.push('Player name is required.');
+  if (!age || age < 5 || age > 99) errors.push('Age must be between 5 and 99.');
+  if (!mobile || !/^\+?[\d\s\-]{7,15}$/.test(mobile)) errors.push('Enter a valid mobile number (7–15 digits).');
+  if (!date)                        errors.push('Joining date is required.');
   if (!type)                        errors.push('Playing type is required.');
 
   return errors;

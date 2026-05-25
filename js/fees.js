@@ -214,7 +214,12 @@ async function handleFeeAction(e) {
     btn.disabled = true;
     const { error } = await updateDocument('fees', id, { status: 'paid' });
     if (error) { showToast(error, 'error'); btn.disabled = false; }
-    else showToast('Payment marked as Paid!', 'success');
+    else {
+      if (fee.playerId) {
+        await updateDocument('players', fee.playerId, { feesStatus: 'paid' });
+      }
+      showToast('Payment marked as Paid!', 'success');
+    }
   } else if (action === 'delete') {
     const confirmed = await confirmDialog(
       `Delete payment record for "${fee.playerName || 'this player'}"?`,
@@ -293,6 +298,11 @@ async function handleSaveFee() {
     result = await updateDocument('fees', currentEditId, data);
   } else {
     result = await addDocument('fees', data);
+  }
+
+  // Sync fee status to the player's profile
+  if (!result.error && data.playerId) {
+    await updateDocument('players', data.playerId, { feesStatus: data.status });
   }
 
   setButtonLoading(saveBtn, false);
